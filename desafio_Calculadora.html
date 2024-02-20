@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <title>Calculadora</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background-image: linear-gradient(#025757, #4a7bff);
+            margin: 0;
+            font-family: "Inter", sans-serif;
+            font-weight: 400;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gridContainer {
+            width: 300px;
+            height: 75vh;
+            min-height: 70vh;
+            background-color: rgb(46, 46, 46);
+            padding: 15px;
+            border-radius: 4px;
+
+            display: grid;
+            grid-template-columns: repeat(4, [col-start] 1fr [col-end]);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 8px;
+
+        }
+
+        .gridItem:first-child {
+            height: 1.8rem;
+            max-height: 2rem;
+        }
+
+        .gridItem {
+            background-color: color-mix(in srgb, black 75%, grey);
+            color: white;
+            text-align: right;
+            height: 3.5rem;
+            max-height: 3.5rem;
+            padding: 15px 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .gridItem:hover:not(#total, #limpar, #igual, .operadores) {
+            background-color: color-mix(in srgb, black 65%, grey);
+        }
+
+        .operadores {
+            background-color: color-mix(in srgb, black 90%, grey);
+            box-shadow: -3px 3px 5px rgb(0 0 0 / .8);
+        }
+
+        .operadores:hover {
+            background-color: color-mix(in srgb, black 80%, grey);
+            box-shadow: -3px 3px 5px rgb(0 0 0 / .8);
+        }
+
+
+        #total {
+            grid-column: col-start 1 / col-end 4;
+            text-align: right;
+            background-color: rgb(26 25 25);
+            font-size: 20px;
+        }
+
+        #zero {
+            grid-column: span 3;
+        }
+
+        #mais {
+            grid-column: col-start 4;
+            grid-row: 5 / -1;
+        }
+
+        #limpar,
+        #igual {
+            background-color: color-mix(in srgb, white 70%, rgb(47, 47, 47));
+            color: black;
+        }
+
+        #limpar:hover,
+        #igual:hover {
+            background-color: color-mix(in srgb, white 55%, rgb(47, 47, 47));
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="gridContainer">
+        <output class="gridItem" id="total">0</output>
+
+        <button class="gridItem gridItem_Col1 gridItem" id="limpar" onclick="clean()">AC</button>
+        <button class="gridItem" id="igual" onclick="insert('=')">=</button>
+        <button class="gridItem operadores" onclick="insert('x')">x</button>
+        <button class="gridItem operadores" onclick="insert('/')">/</button>
+        <button class="gridItem" onclick="insert (7)">7</button>
+        <button class="gridItem" onclick="insert(8)">8</button>
+        <button class="gridItem" onclick="insert(9)">9</button>
+        <button class="gridItem operadores" onclick="insert('%')">%</button>
+        <button class="gridItem" onclick="insert(4)">4</button>
+        <button class="gridItem" onclick="insert(5)">5</button>
+        <button class="gridItem" onclick="insert(6)">6</button>
+        <button class="gridItem operadores" onclick="insert('-')">-</button>
+        <button class="gridItem" onclick="insert(1)">1</button>
+        <button class="gridItem" onclick="insert(2)">2</button>
+        <button class="gridItem" onclick="insert(3)">3</button>
+        <button class="gridItem operadores" id="mais" onclick="insert('+')">+</button>
+        <button class="gridItem" id="zero" onclick="insert(0)">0</button>
+        <button class="gridItem" onclick="insert('.')">.</button>
+    </div>
+
+    <script>
+        "use strict"
+
+        const saidaHTML = document.getElementById("total")
+        const arrNumbers = []
+        const arrOperadores = []
+        let resultadoConta = null
+        let limpaPrimeiroZero = 0
+        let operadorLogico = false
+        let num1 = ''
+        let num2 = ''
+
+
+        function clean() {
+            saidaHTML.innerHTML = "0"
+            arrNumbers.length = 0
+            arrOperadores.length = 0
+            num1 = ''
+            num2 = ''
+            operadorLogico = false
+            resultadoConta = null
+        }
+
+        function insert(operador) {
+
+            if (saidaHTML.value == 0 && (typeof operador == 'number')) {
+                saidaHTML.innerHTML = ""
+            }
+
+            if (typeof operador == 'number' || operador == '.') {
+                saidaHTML.innerHTML += operador
+                arrNumbers.push(String(operador))
+            } else
+                if (operador == '+' || operador == '/' || operador == 'x' || operador == '-') {
+
+                    if (operadorLogico) {
+                        arrOperadores.push(operador)
+
+                        for (let i = 0; i < arrNumbers.length; i++) {
+                            num2 += arrNumbers[i]
+                        }
+                        arrNumbers.length = 0
+
+
+                        switch (arrOperadores[0]) {
+                            case '+':
+                                somar(num1, num2)
+                                arrOperadores.shift()
+                                saidaHTML.innerHTML += ` ${arrOperadores[0]} `
+                                break
+                            case '-':
+                                subtrair(num1, num2)
+                                arrOperadores.shift()
+                                saidaHTML.innerHTML += ` ${arrOperadores[0]} `
+                                break
+                            case 'x':
+                                multiplica(num1, num2)
+                                arrOperadores.shift()
+                                saidaHTML.innerHTML += ` ${arrOperadores[0]} `
+                                break
+                            case '/':
+                                divide(num1, num2)
+                                arrOperadores.shift()
+                                saidaHTML.innerHTML += ` ${arrOperadores[0]} `
+                                break
+                            default:
+                                null
+                        }
+
+                    } else {
+                        operadorLogico = true
+                        arrOperadores.push(operador)
+                        saidaHTML.innerHTML += ` ${arrOperadores[0]} `
+
+                        for (let i = 0; i < arrNumbers.length; i++) {
+                            num1 += arrNumbers[i]
+                        }
+                        arrNumbers.length = 0
+                    }
+                } else
+                    if (operador == '%') {
+                        if (operadorLogico) {
+                            arrOperadores.push(operador)
+
+                            for (let i = 0; i < arrNumbers.length; i++) {
+                                num2 += arrNumbers[i]
+                            }
+                            arrNumbers.length = 0
+                            porcentagem(num1, num2)
+                            arrOperadores.length = 0
+                            operadorLogico = false
+                        }
+                    }
+                    else {
+                        if (operadorLogico) {
+                            for (let i = 0; i < arrNumbers.length; i++) {
+                                num2 += arrNumbers[i]
+                            }
+                            arrNumbers.length = 0
+
+                            switch (arrOperadores[0]) {
+                                case '+':
+                                    somar(num1, num2)
+                                    arrOperadores.length = 0
+                                    break
+                                case '-':
+                                    subtrair(num1, num2)
+                                    arrOperadores.length = 0
+                                    break
+                                case 'x':
+                                    multiplica(num1, num2)
+                                    arrOperadores.length = 0
+                                    break
+                                case '/':
+                                    divide(num1, num2)
+                                    arrOperadores.length = 0
+                                    break
+                                default:
+                                    null
+                            }
+                            arrOperadores.length = 0
+                            operadorLogico = false
+
+                        } else {
+                            null
+                        }
+                    }
+        }
+
+        function somar(valor1, valor2) {
+            if (resultadoConta == null) {
+                resultadoConta = parseFloat(valor1) + parseFloat(valor2)
+            } else
+                if (typeof resultadoConta == 'number') {
+                    resultadoConta += parseFloat(valor2)
+                }
+            saidaHTML.innerHTML = resultadoConta
+            num1 = ''
+            num2 = ''
+        }
+
+        function subtrair(valor1, valor2) {
+            if (resultadoConta == null) {
+                resultadoConta = parseFloat(valor1) - parseFloat(valor2)
+            } else
+                if (typeof resultadoConta == 'number') {
+                    resultadoConta -= parseFloat(valor2)
+                }
+            saidaHTML.innerHTML = resultadoConta
+            num1 = ''
+            num2 = ''
+        }
+
+        function multiplica(valor1, valor2) {
+            if (resultadoConta == null) {
+                resultadoConta = parseFloat(valor1) * parseFloat(valor2)
+            } else
+                if (typeof resultadoConta == 'number') {
+                    resultadoConta *= parseFloat(valor2)
+                }
+            saidaHTML.innerHTML = resultadoConta
+            num1 = ''
+            num2 = ''
+        }
+
+        function divide(valor1, valor2) {
+            if (resultadoConta == null) {
+                resultadoConta = parseFloat(valor1) / parseFloat(valor2)
+            } else
+                if (typeof resultadoConta == 'number') {
+                    resultadoConta /= parseFloat(valor2)
+                }
+            saidaHTML.innerHTML = resultadoConta
+            num1 = ''
+            num2 = ''
+        }
+
+        function porcentagem(valor1, valor2) {
+            if (resultadoConta == null) {
+                switch (arrOperadores[0]) {
+                    case 'x':
+                        resultadoConta = parseFloat(valor1) * (parseFloat(valor2) / 100)
+                        break
+                    case '+':
+                        resultadoConta = ((parseFloat(valor2) / 100) * parseFloat(valor1)) + parseFloat(valor1)
+                        break
+                    case '-':
+                        resultadoConta = parseFloat(valor1) - ((parseFloat(valor2) / 100) * parseFloat(valor1))
+                        break
+                    case '/':
+                        resultadoConta = parseFloat(valor1) / (parseFloat(valor2) / 100)
+                        break
+                    default:
+                        null
+                }
+
+            } else
+                if (typeof resultadoConta == 'number') {
+                    switch (arrOperadores[0]) {
+                        case 'x':
+                            resultadoConta = resultadoConta * (parseFloat(valor2) / 100)
+                            break
+                        case '+':
+                            resultadoConta = ((parseFloat(valor2) / 100) * resultadoConta) + resultadoConta
+                            break
+                        case '-':
+                            resultadoConta = ((parseFloat(valor2) / 100) * resultadoConta) - resultadoConta
+                            break
+                        case '/':
+                            resultadoConta = resultadoConta / (parseFloat(valor2) / 100)
+                            break
+
+                        default:
+                            null
+                    }
+                }
+            saidaHTML.innerHTML = resultadoConta
+            num1 = ''
+            num2 = ''
+        }
+
+
+
+
+    </script>
+
+</body>
+
+</html>
